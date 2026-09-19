@@ -1,0 +1,16 @@
+{
+  "name": "pi-harness",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Codex-style desktop shell on a vendored pi coding-agent kernel",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "pnpm -r --workspace-concurrency=1 test",
+    "test:watch": "pnpm -r --workspace-concurrency=1 test:watch",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  }
+}

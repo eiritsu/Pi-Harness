@@ -1,0 +1,7 @@
+packages:
+  - protocol
+  - kernel
+  - host
+  - ui
+onlyBuiltDependencies:
+  - esbuild
