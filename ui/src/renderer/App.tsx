@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
-import type { Envelope } from '@pi-harness/protocol';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import type { Envelope } from '@pi-harness/protocol/contract';
 import { initialState, reduceEvent, reduceQueryResponse } from './store';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/MessageList';
 import { Composer } from './components/Composer';
 import { KernelBanner } from './components/KernelBanner';
+import { CommandPalette } from './components/CommandPalette';
+import { EventLog } from './components/EventLog';
+import { ToolPanel } from './components/ToolPanel';
 import { logoUrl } from './assets/logo';
 
 declare global {
@@ -28,17 +31,52 @@ export function App() {
     },
     initialState,
   );
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [bottomOpen, setBottomOpen] = useState(true);
   const queryIdRef = useRef(0);
+
+  const queryRegistry = () => {
+    queryIdRef.current += 1;
+    window.harness.send({ channel: 'query', id: queryIdRef.current, payload: { kind: 'get_registry' } });
+  };
 
   useEffect(() => {
     const off = window.harness.onEvent((envelope) => {
       dispatch({ type: 'event', envelope });
+      if (envelope.channel === 'event' && envelope.payload.type === 'command_executed') {
+        queryRegistry(); // 插件命令可能改动注册表 → 重查（幂等投影）
+      }
     });
-    // 启动即拉会话列表（幂等投影）
+    // 启动即拉会话列表与注册表（幂等投影）
     queryIdRef.current += 1;
     window.harness.send({ channel: 'query', id: queryIdRef.current, payload: { kind: 'list_sessions' } });
+    queryRegistry();
     return off;
   }, []);
+
+  // ⌘K / Ctrl+K 命令面板；⌘\ 底部面板
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        setBottomOpen((v) => !v);
+      }
+      if (e.key === 'Escape') setPaletteOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const runCommand = (commandId: string) => {
+    window.harness.send({
+      channel: 'command',
+      payload: { type: 'run_command', commandId, sessionId: state.currentSessionId ?? undefined },
+    });
+  };
 
   const newSession = () => {
     window.harness.send({ channel: 'command', payload: { type: 'create_session', projectId: null } });
@@ -82,12 +120,17 @@ export function App() {
             emptyState
           )}
         </div>
-        <Composer onSend={send} disabled={!state.currentSessionId} />
+        <Composer onSend={send} disabled={!state.currentSessionId} commands={state.registry?.commands ?? []} onRunCommand={runCommand} />
+        {bottomOpen && <EventLog log={state.log} />}
       </main>
-      <aside className="right-panel" data-testid="right-panel">
-        <div className="panel-title">文件树</div>
-        <div className="panel-empty">M3 接入注册表后启用</div>
-      </aside>
+      <ToolPanel tools={state.registry?.tools ?? []} />
+      <CommandPalette
+        open={paletteOpen}
+        commands={state.registry?.commands ?? []}
+        onClose={() => setPaletteOpen(false)}
+        onExecute={runCommand}
+        onOpen={queryRegistry}
+      />
     </div>
   );
 }

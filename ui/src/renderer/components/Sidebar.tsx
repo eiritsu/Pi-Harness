@@ -1,4 +1,4 @@
-import type { SessionMeta } from '@pi-harness/protocol';
+import type { SessionMeta } from '@pi-harness/protocol/contract';
 
 export function Sidebar(props: {
   sessions: SessionMeta[];

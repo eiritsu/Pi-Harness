@@ -6,9 +6,10 @@ import type {
   KernelEvent,
   Message,
   QueryResponse,
+  RegistrySnapshot,
   SessionMeta,
   TextContent,
-} from '@pi-harness/protocol';
+} from '@pi-harness/protocol/contract';
 
 export interface UiState {
   kernelStatus: 'starting' | 'ready' | 'busy' | 'error';
@@ -18,6 +19,9 @@ export interface UiState {
   /** 流式中的 assistant 文本缓冲 */
   streamingText: string;
   pendingApprovals: Map<string, { toolName: string; reason: string; detail: string }>;
+  registry: RegistrySnapshot | null;
+  /** 底部面板事件日志（命令回执 / 状态变化），最新在底部 */
+  log: string[];
 }
 
 export const initialState: UiState = {
@@ -27,12 +31,22 @@ export const initialState: UiState = {
   messages: [],
   streamingText: '',
   pendingApprovals: new Map(),
+  registry: null,
+  log: [],
 };
 
 export function reduceEvent(state: UiState, event: KernelEvent): UiState {
   switch (event.type) {
     case 'kernel_status':
-      return { ...state, kernelStatus: event.status };
+      return {
+        ...state,
+        kernelStatus: event.status,
+        log: [...state.log.slice(-50), `[status] ${event.status}`],
+      };
+    case 'command_executed': {
+      const line = `[command] ${event.commandId}${event.detail ? ` — ${event.detail}` : ''}${event.ok ? '' : '（失败）'}`;
+      return { ...state, log: [...state.log.slice(-50), line] };
+    }
     case 'session_started':
       return {
         ...state,
@@ -87,6 +101,9 @@ export function reduceEvent(state: UiState, event: KernelEvent): UiState {
 export function reduceQueryResponse(state: UiState, resp: QueryResponse): UiState {
   if (resp.kind === 'list_sessions') {
     return { ...state, sessions: resp.sessions };
+  }
+  if (resp.kind === 'get_registry') {
+    return { ...state, registry: resp.registry };
   }
   return state;
 }

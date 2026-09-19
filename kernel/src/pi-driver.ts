@@ -33,6 +33,7 @@ import {
 import { isPermissionMode } from '@pi-harness/protocol';
 import type { KernelDriver } from './driver.js';
 import { judge, type ToolRisk } from './sandbox.js';
+import { loadRegistrySnapshot } from './registry-loader.js';
 
 export type FauxRegistration = ReturnType<typeof registerFauxProvider>;
 
@@ -51,6 +52,8 @@ export interface PiKernelDriverOptions {
   /** 覆盖默认 faux 模型脚本（测试注入点） */
   buildResponses?: (registration: FauxRegistration) => void;
   workspaceRoot?: string;
+  /** 插件注册表文件；每次 get_registry 重读（M3 验收机制） */
+  pluginRegistryPaths?: string[];
 }
 
 function nextRequestId(session: SessionRuntime): string {
@@ -83,9 +86,11 @@ export class PiKernelDriver implements KernelDriver {
   private faux: FauxRegistration;
   private seq = 0;
   private workspaceRoot: string;
+  private pluginRegistryPaths: string[];
 
   constructor(opts: PiKernelDriverOptions = {}) {
     this.workspaceRoot = opts.workspaceRoot ?? '/tmp/pi-harness-workspace';
+    this.pluginRegistryPaths = opts.pluginRegistryPaths ?? [];
     this.faux = registerFauxProvider({
       models: [
         {
@@ -310,6 +315,27 @@ export class PiKernelDriver implements KernelDriver {
         rt?.agent.abort();
         return;
       }
+      case 'run_command': {
+        if (command.commandId === 'session.new') {
+          this.handleCommand({ type: 'create_session', projectId: null });
+          this.emit({ type: 'command_executed', commandId: command.commandId, ok: true, detail: '新对话已创建' });
+          return;
+        }
+        if (command.commandId.startsWith('permission.')) {
+          const mode = command.commandId.slice('permission.'.length);
+          const target = command.sessionId ?? [...this.sessions.keys()][0];
+          if (
+            target &&
+            (mode === 'read-only' || mode === 'sandbox_workspace_write' || mode === 'full-access' || mode === 'auto')
+          ) {
+            this.handleCommand({ type: 'set_permission_mode', sessionId: target, mode });
+            this.emit({ type: 'command_executed', commandId: command.commandId, ok: true, detail: `权限档 → ${mode}` });
+            return;
+          }
+        }
+        this.emit({ type: 'command_executed', commandId: command.commandId, ok: true });
+        return;
+      }
       case 'stop_session': {
         const rt = this.sessions.get(command.sessionId);
         if (rt) {
@@ -337,11 +363,14 @@ export class PiKernelDriver implements KernelDriver {
         return Promise.resolve({ kind: 'get_session', meta: rt.meta, messages: [] });
       }
       case 'get_registry': {
-        return Promise.resolve({
-          kind: 'get_registry',
-          registry: {
+        const { snapshot } = loadRegistrySnapshot(
+          {
             commands: [
               { id: 'session.new', title: '新对话', group: 'action', source: 'builtin' },
+              { id: 'permission.read-only', title: '权限：只读', group: 'action', source: 'builtin' },
+              { id: 'permission.sandbox_workspace_write', title: '权限：工作区写入', group: 'action', source: 'builtin' },
+              { id: 'permission.full-access', title: '权限：完全访问', group: 'action', source: 'builtin' },
+              { id: 'permission.auto', title: '权限：自动', group: 'action', source: 'builtin' },
             ],
             tools: [
               { name: 'fs.read', description: '读取文件', source: 'builtin' },
@@ -351,7 +380,9 @@ export class PiKernelDriver implements KernelDriver {
               { id: 'default', title: '默认预设', permissionMode: 'sandbox_workspace_write', source: 'builtin' },
             ],
           },
-        });
+          this.pluginRegistryPaths,
+        );
+        return Promise.resolve({ kind: 'get_registry', registry: snapshot });
       }
     }
   }

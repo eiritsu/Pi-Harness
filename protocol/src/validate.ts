@@ -103,6 +103,12 @@ export function isKernelEvent(v: unknown): v is KernelEvent {
         v['status'] === 'busy' ||
         v['status'] === 'error'
       );
+    case 'command_executed':
+      return (
+        typeof v['commandId'] === 'string' &&
+        typeof v['ok'] === 'boolean' &&
+        (v['detail'] === undefined || typeof v['detail'] === 'string')
+      );
     default:
       return false;
   }
@@ -129,6 +135,11 @@ export function isKernelCommand(v: unknown): v is KernelCommand {
     case 'set_permission_mode':
       return (
         typeof v['sessionId'] === 'string' && isPermissionMode(v['mode'])
+      );
+    case 'run_command':
+      return (
+        typeof v['commandId'] === 'string' &&
+        (v['sessionId'] === undefined || typeof v['sessionId'] === 'string')
       );
     default:
       return false;

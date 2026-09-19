@@ -19,10 +19,14 @@ let driver: KernelDriver | null = null;
 
 function makeDriver(): KernelDriver {
   const which = process.env['PI_HARNESS_DRIVER'] ?? 'fake';
+  // 冒号分隔的插件注册表文件（M3 验收：运行中写入即生效）
+  const pluginPaths = (process.env['PI_HARNESS_PLUGIN_REGISTRY'] ?? '')
+    .split(':')
+    .filter((p) => p.length > 0);
   if (which === 'pi') {
-    return new PiKernelDriver();
+    return new PiKernelDriver({ pluginRegistryPaths: pluginPaths });
   }
-  return new FakeKernelDriver();
+  return new FakeKernelDriver({ pluginRegistryPaths: pluginPaths });
 }
 
 function createWindow(): void {

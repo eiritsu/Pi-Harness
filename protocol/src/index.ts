@@ -108,6 +108,13 @@ export type KernelEvent =
       type: 'kernel_status';
       status: 'starting' | 'ready' | 'busy' | 'error';
       detail?: string;
+    }
+  /** v1 追加：注册表命令执行回执（插件命令的 UI 反馈） */
+  | {
+      type: 'command_executed';
+      commandId: string;
+      ok: boolean;
+      detail?: string;
     };
 
 // ---------------------------------------------------------------------------
@@ -125,7 +132,13 @@ export type KernelCommand =
       decision: ApprovalDecision;
     }
   | { type: 'set_permission_mode'; sessionId: SessionId; mode: PermissionMode }
-  | { type: 'stop_session'; sessionId: SessionId };
+  | { type: 'stop_session'; sessionId: SessionId }
+  /**
+   * v1 追加：注册表命令执行。内置命令由 kernel 语义化处理
+   * （session.new → create_session；permission.* → set_permission_mode），
+   * 插件命令回执 command_executed 事件。
+   */
+  | { type: 'run_command'; commandId: string; sessionId?: SessionId };
 
 // ---------------------------------------------------------------------------
 // 查询（ui → kernel 请求/响应；响必须为纯数据）

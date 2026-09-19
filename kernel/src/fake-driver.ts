@@ -15,8 +15,8 @@ export class FakeKernelDriver implements KernelDriver {
   private kernel: FakeKernel;
   private listeners = new Set<(e: KernelEvent) => void>();
 
-  constructor() {
-    this.kernel = new FakeKernel();
+  constructor(opts: { pluginRegistryPaths?: string[] } = {}) {
+    this.kernel = new FakeKernel({ pluginRegistryPaths: opts.pluginRegistryPaths });
     this.kernel.on((envelope) => {
       if (envelope.channel !== 'event') return;
       for (const l of [...this.listeners]) l(envelope.payload);

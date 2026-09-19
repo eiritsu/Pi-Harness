@@ -20,6 +20,7 @@ import type {
   ToolResultContent,
 } from './index.js';
 import { PROTOCOL_VERSION } from './index.js';
+import { loadRegistrySnapshot } from './registry-loader.js';
 
 export interface ScriptStep {
   /** 用户输入文本（触发一轮） */
@@ -38,6 +39,8 @@ export interface FakeKernelOptions {
   registry?: RegistrySnapshot;
   /** 默认权限档；auto = 不再发 approval_request */
   permissionMode?: PermissionMode;
+  /** 插件注册表文件；每次 get_registry 重读（M3 验收机制） */
+  pluginRegistryPaths?: string[];
 }
 
 let seq = 0;
@@ -51,10 +54,12 @@ export class FakeKernel {
   private messages = new Map<string, Message[]>();
   private permissionMode: PermissionMode;
   private registry: RegistrySnapshot;
+  private pluginRegistryPaths: string[];
   private listeners: Array<(e: Envelope) => void> = [];
 
   constructor(opts: FakeKernelOptions = {}) {
     this.permissionMode = opts.permissionMode ?? 'sandbox_workspace_write';
+    this.pluginRegistryPaths = opts.pluginRegistryPaths ?? [];
     this.registry = opts.registry ?? {
       commands: [
         { id: 'session.new', title: '新对话', group: 'action', source: 'builtin' },
@@ -140,6 +145,25 @@ export class FakeKernel {
       case 'interrupt':
       case 'stop_session':
         return;
+      case 'run_command': {
+        // 内置命令语义化处理；其余回执 command_executed
+        if (cmd.commandId === 'session.new') {
+          this.handleCommand({ type: 'create_session', projectId: null });
+          this.emit({ type: 'command_executed', commandId: cmd.commandId, ok: true, detail: '新对话已创建' });
+          return;
+        }
+        if (cmd.commandId.startsWith('permission.')) {
+          const mode = cmd.commandId.slice('permission.'.length);
+          const target = cmd.sessionId ?? [...this.sessions.keys()][0];
+          if (target && (mode === 'read-only' || mode === 'sandbox_workspace_write' || mode === 'full-access' || mode === 'auto')) {
+            this.handleCommand({ type: 'set_permission_mode', sessionId: target, mode });
+            this.emit({ type: 'command_executed', commandId: cmd.commandId, ok: true, detail: `权限档 → ${mode}` });
+            return;
+          }
+        }
+        this.emit({ type: 'command_executed', commandId: cmd.commandId, ok: true });
+        return;
+      }
     }
   }
 
@@ -171,10 +195,8 @@ export class FakeKernel {
         return;
       }
       case 'get_registry': {
-        this.emitQueryResponse(id, {
-          kind: 'get_registry',
-          registry: this.registry,
-        });
+        const { snapshot } = loadRegistrySnapshot(this.registry, this.pluginRegistryPaths);
+        this.emitQueryResponse(id, { kind: 'get_registry', registry: snapshot });
         return;
       }
     }

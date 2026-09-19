@@ -1,4 +1,4 @@
-import type { Message } from '@pi-harness/protocol';
+import type { Message } from '@pi-harness/protocol/contract';
 
 function ToolCard(props: { name: string; payload: Record<string, unknown> }) {
   return (
