@@ -75,5 +75,40 @@
       "type": "message_end",
       "sessionId": "<id:session>"
     }
+  },
+  {
+    "seq": 9,
+    "type": "message_start",
+    "payload": {
+      "type": "message_start",
+      "sessionId": "<id:session>",
+      "role": "assistant"
+    }
+  },
+  {
+    "seq": 10,
+    "type": "text_delta",
+    "payload": {
+      "type": "text_delta",
+      "sessionId": "<id:session>",
+      "delta": "echo: 你好"
+    }
+  },
+  {
+    "seq": 11,
+    "type": "text_delta",
+    "payload": {
+      "type": "text_delta",
+      "sessionId": "<id:session>",
+      "delta": "done"
+    }
+  },
+  {
+    "seq": 12,
+    "type": "message_end",
+    "payload": {
+      "type": "message_end",
+      "sessionId": "<id:session>"
+    }
   }
 ]

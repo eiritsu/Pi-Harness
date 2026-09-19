@@ -32,6 +32,13 @@ export class FakeKernelDriver implements KernelDriver {
 
   handleCommand(command: KernelCommand): void {
     this.kernel.handleCommand(command);
+    // dev fake 行为：用户消息自动得到一条回声回复（流式），驱动 UI 冒烟
+    if (command.type === 'send_user_message') {
+      this.kernel.runScriptStep(command.sessionId, {
+        userText: command.text,
+        textDeltas: [`echo: ${command.text}`],
+      });
+    }
   }
 
   handleQuery(query: Query): Promise<QueryResponse> {

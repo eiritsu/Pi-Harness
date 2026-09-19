@@ -1,0 +1,153 @@
+/* 三栏布局骨架（M2）：侧栏 264px + 主区 + 右面板挂点；底部面板挂点为 .bottom-slot */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr auto;
+  height: 100%;
+}
+
+/* ---- 侧栏 ---- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: var(--sp-3);
+  gap: var(--sp-3);
+}
+.new-chat { width: 100%; padding: var(--sp-2); }
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.session-row {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.session-row:hover { background: var(--bg-hover); color: var(--text); }
+.session-row.active { background: var(--bg-card); color: var(--text); }
+.session-empty { color: var(--text-3); font-size: var(--fs-small); padding: 0 var(--sp-2); }
+.sidebar-footer {
+  color: var(--text-3);
+  font-size: var(--fs-small);
+  border-top: 1px solid var(--border);
+  padding-top: var(--sp-2);
+}
+
+/* ---- 主区 ---- */
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.kernel-banner {
+  background: var(--danger);
+  color: #fff;
+  padding: var(--sp-2) var(--sp-4);
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.thread {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.messages {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  color: var(--text-2);
+}
+.msg.user {
+  align-self: flex-end;
+  max-width: 85%;
+  background: var(--bg-card);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+.msg.assistant { align-self: stretch; }
+.msg.assistant p { margin: 0; white-space: pre-wrap; line-height: 1.6; }
+.cursor { color: var(--text-3); animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---- 工具卡 ---- */
+.tool-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.tool-name { font-size: var(--fs-small); color: var(--text-2); }
+.tool-args {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  color: var(--text-2);
+  max-height: 120px;
+  overflow: hidden;
+}
+.tool-result {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  color: var(--text-3);
+  margin: var(--sp-1) 0;
+}
+.tool-result.ok { color: var(--success); }
+.tool-result.err { color: var(--danger); }
+
+/* ---- Composer ---- */
+.composer {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto var(--sp-4);
+  padding: 0 var(--sp-4);
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-end;
+}
+.composer textarea {
+  flex: 1;
+  resize: none;
+  min-height: 40px;
+  max-height: 220px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-lg);
+  line-height: 1.5;
+}
+.composer .send { height: 40px; width: 40px; font-size: 16px; }
+
+/* ---- 右面板（挂点） ---- */
+.right-panel {
+  width: var(--right-panel-w);
+  border-left: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  padding: var(--sp-3);
+  display: none; /* M3 注册表接入后由 .with-right-panel 显示 */
+}
+.panel-title { color: var(--text-2); font-size: var(--fs-small); margin-bottom: var(--sp-2); }
+.panel-empty { color: var(--text-3); font-size: var(--fs-small); }

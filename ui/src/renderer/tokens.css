@@ -1,0 +1,70 @@
+:root {
+  /* 色板 — 深色低装饰（定稿于设计阶段） */
+  --bg: #0d0d0d;
+  --bg-sidebar: #161616;
+  --bg-card: #1c1c1e;
+  --bg-hover: #26262a;
+  --border: #2a2a2e;
+  --text: #ececec;
+  --text-2: #9a9aa0;
+  --text-3: #636368;
+  --accent: #4a8cff;
+  --warn: #e08a3c;
+  --danger: #e5534b;
+  --success: #4ac26b;
+
+  --font-ui: -apple-system, "SF Pro Text", "PingFang SC", sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+
+  --fs-body: 13px;
+  --fs-small: 11px;
+  --fs-title: 17px;
+  --fs-code: 12px;
+
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+
+  --sidebar-w: 264px;
+  --right-panel-w: 280px;
+  --bottom-panel-h: 200px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  color: var(--text);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+  cursor: pointer;
+}
+button:hover { background: var(--bg-hover); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+input, textarea {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  color: var(--text);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }

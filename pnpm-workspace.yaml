@@ -6,13 +6,15 @@ packages:
   - core/vendor/pi-mono/packages/*
 
 allowBuilds:
-  '@google/genai': set this to true or false
-  canvas: set this to true or false
-  esbuild: set this to true or false
-  protobufjs: set this to true or false
+  '@google/genai': true
+  canvas: true
+  electron: true
+  esbuild: true
+  protobufjs: true
 
 onlyBuiltDependencies:
   - esbuild
+  - electron
   - protobufjs
   - canvas
   - '@google/genai'

@@ -122,14 +122,15 @@ describe('M1 golden 回放（FakeKernelDriver）', () => {
     await expectGolden('permission-auto', records);
   });
 
-  it('golden/registry：注册表查询与未知会话错误路径', async () => {
-    const records = await runScenario(async (d) => {
-      const reg = await d.handleQuery({ kind: 'get_registry' });
+  it('golden/registry：注册表查询与未知会话错误路径（纯查询，无事件流）', async () => {
+    const driver = new FakeKernelDriver();
+    try {
+      const reg = await driver.handleQuery({ kind: 'get_registry' });
       expect(reg.kind).toBe('get_registry');
-      const err = await d.handleQuery({ kind: 'get_session', sessionId: 'nope' });
+      const err = await driver.handleQuery({ kind: 'get_session', sessionId: 'nope' });
       expect(err.kind).toBe('get_session_error');
-    });
-    // 查询响应走 query_response 通道，事件流里没有它们——这条 golden 主要固化事件面
-    await expectGolden('registry', records);
+    } finally {
+      driver.dispose();
+    }
   });
 });
