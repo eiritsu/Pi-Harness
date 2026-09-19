@@ -80,6 +80,14 @@ M0 是后面所有测试的地基——契约一旦冻结，内核与 UI 可并�
 ### M6 内测闭环（持续，进入循环）
 见 §5。门槛：一轮 dogfood 的 P0/P1 bug 清零才进下一特性迭代。
 
+> **M5 状态（2026-09-19）**：electron-builder 管线 ✅（asar 全量 bundle，240MB app / 100MB DMG）、
+> 图标 icns 由 `assets/brand/pi-logo-on-dark.svg` 生成 ✅、应用内检查更新（GitHub Releases API →
+> 设置页提示 → 打开下载页）✅、CI release workflow（tag 触发：构建→测试→发布 DMG）✅。
+> **待用户提供**：Apple Developer 账号 → 开启签名+公证（electron-builder.yml 已留 identity 与
+> notarize 注释位，填 secrets 即可）；Sparkle 自动更新二期再评估。
+> 本地手测：`ui/release/Pi Harness-0.1.0-arm64.dmg` 挂载 → 拖入 Applications → 启动 →
+> 新对话（mock 回声）→ 设置页检查更新。
+
 ---
 
 ## 4. 代码级测试闭环

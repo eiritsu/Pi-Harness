@@ -57,6 +57,7 @@ function createWindow(): void {
   win.webContents.on('did-finish-load', () => {
     // 事件通道：driver → renderer
     driver?.onEvent((event) => {
+      if (process.env['PI_HARNESS_DEBUG']) console.error('[main:event]', event.type);
       if (event.type === 'session_started') lastSessionId = event.sessionId;
       if (win && !win.isDestroyed()) {
         const envelope: Envelope = { channel: 'event', payload: event };
@@ -94,6 +95,41 @@ function registerIpc(): void {
   });
 }
 
+/** M5：应用内检查更新（检测→提示→手动 DMG 替换；Sparkle 留后续） */
+async function checkForUpdate(): Promise<{
+  current: string;
+  latest?: string;
+  updateAvailable?: boolean;
+  releaseUrl?: string;
+  notice?: string;
+}> {
+  const current = app.getVersion();
+  try {
+    const res = await fetch('https://api.github.com/repos/eiritsu/Pi-Harness/releases/latest', {
+      headers: { 'user-agent': 'Pi-Harness-Updater' },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return { current, notice: `无法检查更新（HTTP ${res.status}）` };
+    const data = (await res.json()) as { tag_name?: string; html_url?: string };
+    const latest = data.tag_name?.replace(/^v/, '');
+    if (!latest) return { current, notice: '仓库还没有发布版本' };
+    const updateAvailable = compareSemver(latest, current) > 0;
+    return { current, latest, updateAvailable, releaseUrl: data.html_url };
+  } catch {
+    return { current, notice: '无法检查更新（无网络）' };
+  }
+}
+
+function compareSemver(a: string, b: string): number {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
+
 function registerHostIpc(): void {
   const dataDir = process.env['PI_HARNESS_DATA_DIR'] ?? path.join(app.getPath('userData'));
   const settingsStore = new SettingsStore(path.join(dataDir, 'settings.json'));
@@ -106,6 +142,8 @@ function registerHostIpc(): void {
       switch (req.op) {
         case 'settings.get':
           return { ok: true, settings: settingsStore.load() };
+        case 'update.check':
+          return { ok: true, update: await checkForUpdate() };
         case 'settings.set': {
           const next = settingsStore.set(req.section, req.value as never);
           return { ok: true, settings: next };

@@ -1,0 +1,23 @@
+appId: com.eiritsu.pi-harness
+productName: Pi Harness
+directories:
+  buildResources: build
+  output: release
+files:
+  - dist/**/*
+  - "!**/*.map"
+  - "!node_modules/**/*"
+asar: true
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - arm64
+  identity: null # 签名+公证待 Apple Developer 账号；开启后填 identity 与 notarize 配置
+dmg:
+  title: Pi Harness ${version}
+  contents:
+    - { x: 130, y: 220 }
+    - { x: 410, y: 220, type: link, path: /Applications }

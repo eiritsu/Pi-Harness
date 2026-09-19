@@ -40,6 +40,9 @@ export function App() {
   const [presets, setPresets] = useState<PresetFile[]>([]);
   const [defaultPerm, setDefaultPerm] = useState<string | undefined>(undefined);
   const [sessionModes, setSessionModes] = useState<Record<string, string>>({});
+  const [appVersion, setAppVersion] = useState<string | undefined>(undefined);
+  const [checking, setChecking] = useState(false);
+  const [updateNotice, setUpdateNotice] = useState<string | undefined>(undefined);
   const queryIdRef = useRef(0);
 
   const queryRegistry = () => {
@@ -70,6 +73,10 @@ export function App() {
     });
     void window.hostApi?.request({ op: 'presets.list' }).then((r) => {
       if (r.ok && r.presets) setPresets(r.presets);
+    });
+    void window.hostApi?.request({ op: 'update.check' }).then((r) => {
+      const u = r.update as { current?: string } | undefined;
+      if (u?.current) setAppVersion(u.current);
     });
     return off;
   }, []);
@@ -104,6 +111,26 @@ export function App() {
         payload: { type: 'set_permission_mode', sessionId: state.currentSessionId, mode: p.permissionMode },
       });
     }
+  };
+
+  const checkUpdate = () => {
+    setChecking(true);
+    void window.hostApi?.request({ op: 'update.check' }).then((r) => {
+      setChecking(false);
+      const u = r.update as { latest?: string; current?: string; updateAvailable?: boolean; releaseUrl?: string; notice?: string } | undefined;
+      if (!u) {
+        setUpdateNotice('无法检查更新');
+        return;
+      }
+      if (u.notice) {
+        setUpdateNotice(u.notice);
+      } else if (u.updateAvailable) {
+        setUpdateNotice(`发现新版本 v${u.latest}，点击前往下载`);
+        if (u.releaseUrl) window.open(u.releaseUrl, '_blank');
+      } else {
+        setUpdateNotice(`已是最新（v${u.current}）`);
+      }
+    });
   };
 
   const setDefaultPermission = (mode: string) => {
@@ -205,6 +232,10 @@ export function App() {
         }}
         onSetDefaultPermission={setDefaultPermission}
         defaultPermission={defaultPerm as never}
+        version={appVersion}
+        onCheckUpdate={checkUpdate}
+        checking={checking}
+        updateNotice={updateNotice}
       />
     </div>
   );

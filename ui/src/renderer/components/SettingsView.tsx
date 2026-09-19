@@ -13,6 +13,10 @@ export function SettingsView(props: {
   onDeletePreset: (id: string) => void;
   onSetDefaultPermission: (mode: PermissionMode) => void;
   defaultPermission: PermissionMode | undefined;
+  version?: string;
+  onCheckUpdate: () => void;
+  checking?: boolean;
+  updateNotice?: string;
 }) {
   const [section, setSection] = useState<'general' | 'agent' | 'presets' | 'connections' | 'storage'>('agent');
   const [newTitle, setNewTitle] = useState('');
@@ -106,7 +110,16 @@ export function SettingsView(props: {
               </div>
             </div>
           )}
-          {section === 'general' && <p className="hint">语言、开机自启等 — v0.2 接入</p>}
+          {section === 'general' && (
+            <div data-testid="settings-general">
+              <h3>关于</h3>
+              <p className="hint">当前版本 {props.version ?? '—'}</p>
+              <button data-testid="check-update" onClick={props.onCheckUpdate} disabled={props.checking}>
+                {props.checking ? '检查中…' : '检查更新'}
+              </button>
+              {props.updateNotice && <p className="hint" data-testid="update-notice">{props.updateNotice}</p>}
+            </div>
+          )}
           {section === 'connections' && <p className="hint">MCP / 连接器 — v0.3 接入</p>}
           {section === 'storage' && <p className="hint">会话数据目录与缓存清理 — v0.2 接入</p>}
         </div>

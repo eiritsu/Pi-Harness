@@ -105,7 +105,26 @@ export class PiKernelDriver implements KernelDriver {
       ],
       tokensPerSecond: 1_000_000, // 测试用全速吐字
     });
-    if (opts.buildResponses) opts.buildResponses(this.faux);
+    if (opts.buildResponses) {
+      opts.buildResponses(this.faux);
+    } else {
+      // 默认脚本：回声工厂（动态读取最后一条用户消息），自维持不耗尽
+      this.faux.appendResponses([
+        (context) => {
+          const lastUser = [...(context.messages ?? [])]
+            .reverse()
+            .find((m) => m.role === 'user');
+          const text =
+            lastUser && 'content' in lastUser
+              ? (lastUser.content as Array<{ type: string; text?: string }>)
+                  .filter((c) => c.type === 'text')
+                  .map((c) => c.text ?? '')
+                  .join(' ')
+              : '';
+          return fauxAssistantMessage([fauxText(`echo: ${text}`)]);
+        },
+      ]);
+    }
   }
 
   onEvent(listener: (event: KernelEvent) => void): () => void {
@@ -370,6 +389,7 @@ export class PiKernelDriver implements KernelDriver {
           {
             commands: [
               { id: 'session.new', title: '新对话', group: 'action', source: 'builtin' },
+              { id: 'app.settings', title: '打开设置', group: 'settings', source: 'builtin' },
               { id: 'permission.read-only', title: '权限：只读', group: 'action', source: 'builtin' },
               { id: 'permission.sandbox_workspace_write', title: '权限：工作区写入', group: 'action', source: 'builtin' },
               { id: 'permission.full-access', title: '权限：完全访问', group: 'action', source: 'builtin' },

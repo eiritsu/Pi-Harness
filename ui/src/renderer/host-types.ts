@@ -12,6 +12,7 @@ export interface PresetFile {
 
 export type HostRequest =
   | { op: 'settings.get' }
+  | { op: 'update.check' }
   | { op: 'settings.set'; section: string; value: unknown }
   | { op: 'presets.list' }
   | { op: 'presets.create'; title: string }
@@ -25,10 +26,18 @@ export interface HarnessSettingsHost {
   connections: Record<string, unknown>;
 }
 
+export interface UpdateInfoHost {
+  current: string;
+  latest?: string;
+  updateAvailable?: boolean;
+  releaseUrl?: string;
+  notice?: string;
+}
+
 declare global {
   interface Window {
     hostApi?: {
-      request(req: HostRequest): Promise<{ ok: boolean; error?: string; settings?: HarnessSettingsHost; presets?: PresetFile[]; preset?: PresetFile }>;
+      request(req: HostRequest): Promise<{ ok: boolean; error?: string; settings?: HarnessSettingsHost; presets?: PresetFile[]; preset?: PresetFile; update?: UpdateInfoHost }>;
     };
   }
 }
