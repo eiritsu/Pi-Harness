@@ -175,8 +175,8 @@ export function App() {
   const emptyState = useMemo(
     () => (
       <div className="empty" data-testid="empty-state">
-        <img src={logoUrl} alt="Pi Harness" width={72} height={72} />
-        <p>有什么可以帮你的？</p>
+        <img src={logoUrl} alt="Pi Harness" />
+        <div className="empty-title">你想让 Pi Harness 构建什么？</div>
       </div>
     ),
     [],
@@ -188,10 +188,11 @@ export function App() {
         sessions={state.sessions}
         currentSessionId={state.currentSessionId}
         onNewSession={newSession}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <main className="main">
         <KernelBanner status={state.kernelStatus} />
-        <div className="thread" data-testid="thread">
+        <div className="thread" data-testid="thread" style={{ paddingBottom: 96 }}>
           {hasMessages ? (
             <MessageList messages={state.messages} streamingText={state.streamingText} />
           ) : (

@@ -16,19 +16,20 @@ const DANGER: Record<PermissionMode, boolean> = {
 
 /** 权限档指示器 — 安全总开关，常驻可见（Composer 内） */
 export function PermissionBadge(props: {
-  mode: PermissionMode | undefined;
+  mode: string | undefined;
   onCycle: () => void;
 }) {
-  if (!props.mode) return null;
+  const mode = props.mode as PermissionMode | undefined;
+  if (!mode || !(mode in LABELS)) return null;
   return (
     <button
-      className={`perm-badge${DANGER[props.mode] ? ' danger' : ''}`}
+      className={`perm-badge${DANGER[mode] ? ' danger' : ''}`}
       data-testid="perm-badge"
-      data-mode={props.mode}
+      data-mode={mode}
       title="点击切换权限档"
       onClick={props.onCycle}
     >
-      ⛨ {LABELS[props.mode]}
+      <span className="warn-ico">⚠</span> {LABELS[mode]}
     </button>
   );
 }

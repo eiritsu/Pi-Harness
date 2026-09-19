@@ -3,17 +3,17 @@ import type { KeyboardEvent } from 'react';
 import type { RegistryCommandEntry } from '@pi-harness/protocol/contract';
 import { PermissionBadge } from './PermissionBadge';
 
+/** Composer — Codex 实测悬浮卡片：上下文 chips 行 / 输入 / 工具栏（+ 权限 圆形发送） */
 export function Composer(props: {
   onSend: (text: string) => void;
   disabled?: boolean;
   commands?: RegistryCommandEntry[];
   onRunCommand?: (commandId: string) => void;
-  permission?: { mode: string } | string;
+  permission?: string;
   onCyclePermission?: () => void;
 }) {
   const [text, setText] = useState('');
 
-  // slash 命令提示：输入 / 开头时按注册表过滤（查表渲染，不硬编码）
   const slashMatches = useMemo(() => {
     if (!text.startsWith('/') || !props.commands) return [];
     const q = text.slice(1).toLowerCase();
@@ -40,7 +40,7 @@ export function Composer(props: {
         runSlash(slashMatches[0]!.id);
         return;
       }
-      return; // 歧义：等继续输入
+      return;
     }
     props.onSend(t);
     setText('');
@@ -54,37 +54,49 @@ export function Composer(props: {
   };
 
   return (
-    <div className="composer" data-testid="composer">
-      {slashMatches.length > 0 && (
-        <div className="slash-hints" data-testid="slash-hints">
-          {slashMatches.map((c) => (
-            <button key={c.id} className="slash-hint" onClick={() => runSlash(c.id)}>
-              <span>{c.title}</span>
-              <code>{c.id}</code>
-            </button>
-          ))}
+    <div className="composer-wrap">
+      <div className="composer" data-testid="composer">
+        {slashMatches.length > 0 && (
+          <div className="slash-hints" data-testid="slash-hints">
+            {slashMatches.map((c) => (
+              <button key={c.id} className="slash-hint" onClick={() => runSlash(c.id)}>
+                <span>{c.title}</span>
+                <code>{c.id}</code>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="chips-row">
+          <span className="context-chip" data-testid="chip-project">📁 项目</span>
+          <span className="context-chip">💻 本地</span>
+          <span className="context-chip">⎇ main</span>
         </div>
-      )}
-      <textarea
-        data-testid="composer-input"
-        rows={1}
-        placeholder={props.disabled ? '先创建一个新对话' : '给 Pi Harness 发消息…'}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={onKeyDown}
-      />
-      <PermissionBadge
-        mode={typeof props.permission === 'string' ? (props.permission as never) : undefined}
-        onCycle={() => props.onCyclePermission?.()}
-      />
-      <button
-        className="primary send"
-        data-testid="composer-send"
-        onClick={submit}
-        disabled={props.disabled || text.trim().length === 0}
-      >
-        ↑
-      </button>
+        <textarea
+          data-testid="composer-input"
+          rows={1}
+          placeholder={props.disabled ? '先创建一个新对话' : '随心输入'}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+        />
+        <div className="composer-toolbar">
+          <button className="icon-btn" data-testid="composer-attach" title="附加">+</button>
+          <PermissionBadge
+            mode={props.permission}
+            onCycle={() => props.onCyclePermission?.()}
+          />
+          <span className="spacer" />
+          <button
+            className="send-btn"
+            data-testid="composer-send"
+            onClick={submit}
+            disabled={props.disabled || text.trim().length === 0}
+            title="发送"
+          >
+            ↑
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

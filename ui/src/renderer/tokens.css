@@ -1,70 +1,48 @@
 :root {
-  /* 色板 — 深色低装饰（定稿于设计阶段） */
-  --bg: #0d0d0d;
-  --bg-sidebar: #161616;
-  --bg-card: #1c1c1e;
-  --bg-hover: #26262a;
-  --border: #2a2a2e;
-  --text: #ececec;
-  --text-2: #9a9aa0;
-  --text-3: #636368;
-  --accent: #4a8cff;
-  --warn: #e08a3c;
-  --danger: #e5534b;
-  --success: #4ac26b;
+  /* ============ 设计 tokens — 全部来自 ChatGPT.app asar 实测（app-shared CSS） ============ */
 
+  /* 面与文字（暗色主题） */
+  --bg: #0d0d0d;                       /* 窗口底 */
+  --surface: #171717;                  /* --color-surface: 侧栏/面板 */
+  --surface-elevated: #1f1f1f;         /* --color-surface-elevated: composer/卡片 */
+  --surface-hover: rgba(127, 127, 127, 0.16);   /* --alpha-10 */
+  --text: #ececec;
+  --text-2: rgba(236, 236, 236, 0.62);
+  --text-3: rgba(236, 236, 236, 0.38);
+
+  /* 边框 = 前景的 alpha（Codex 不用实色边框） */
+  --border-subtle: rgba(127, 127, 127, 0.12);   /* --alpha-12 */
+  --border: rgba(127, 127, 127, 0.10);          /* --alpha-10 */
+  --hairline: 0 0 0 1px var(--border-subtle);
+
+  /* accent（实测 #339cff）与语义色 */
+  --accent: #339cff;
+  --accent-soft: #8db5ff;
+  --warn: #ff8549;                     /* 完全访问警示橙 */
+  --danger: #ff6764;
+  --success: #40c977;
+
+  /* 字阶（实测：text-xs .75 / sm .875 / md 1 / lg 1.125rem；chat 16px） */
   --font-ui: -apple-system, "SF Pro Text", "PingFang SC", sans-serif;
   --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;                        /* --codex-chat-font-size: 16px */
+  --fs-lg: 18px;
+  --fs-title: 28px;                     /* 空态大标题 */
 
-  --fs-body: 13px;
-  --fs-small: 11px;
-  --fs-title: 17px;
-  --fs-code: 12px;
+  /* 圆角（实测 radius-sm 6 / md 8 / token-row 10 / composer 22） */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-row: 10px;
+  --r-lg: 14px;
+  --r-composer: 22px;
+  --r-full: 9999px;
 
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px;
-  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
-
-  --sidebar-w: 264px;
-  --right-panel-w: 280px;
-  --bottom-panel-h: 200px;
+  /* 布局（实测：sidebar 292 / content 42rem / 行高 36 / floating 16） */
+  --sidebar-w: 292px;
+  --content-w: 42rem;
+  --row-h: 36px;
+  --floating-inset: 16px;
+  --titlebar-safe: 52px;               /* hiddenInset 红绿灯区 */
 }
-
-* { box-sizing: border-box; }
-
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: var(--fs-body);
-  -webkit-font-smoothing: antialiased;
-}
-
-button {
-  font-family: var(--font-ui);
-  font-size: var(--fs-body);
-  color: var(--text);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: var(--sp-1) var(--sp-2);
-  cursor: pointer;
-}
-button:hover { background: var(--bg-hover); }
-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-input, textarea {
-  font-family: var(--font-ui);
-  font-size: var(--fs-body);
-  color: var(--text);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-}
-input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
