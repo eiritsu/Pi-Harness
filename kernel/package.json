@@ -1,0 +1,20 @@
+{
+  "name": "@pi-harness/kernel",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pi-harness/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
