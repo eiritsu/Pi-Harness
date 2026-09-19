@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+*.log
+.npm/
+
+# Build
+dist/
+out/
+build/
+*.tsbuildinfo
+
+# Electron / packaging
+release/
+app/
+
+# Test artifacts
+coverage/
+test-results/
+playwright-report/
+.golden-tmp/
+
+# Env & secrets
+.env
+.env.*
+*.pem
+*.p12
+*.mobileprovision
+
+# Editor
+.vscode/
+.idea/
