@@ -1,6 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RegistryCommandEntry } from '@pi-harness/protocol/contract';
 
+const GROUP_LABELS: Record<string, string> = {
+  action: '操作',
+  navigate: '导航',
+  session: '会话',
+  settings: '设置',
+};
+
+/** cmdk 分组渲染（Codex 实测：group-heading + items） */
+function groupCommands(cmds: RegistryCommandEntry[]): Array<{ group: string; items: RegistryCommandEntry[] }> {
+  const order = ['action', 'navigate', 'session', 'settings'] as const;
+  const out: Array<{ group: string; items: RegistryCommandEntry[] }> = [];
+  for (const g of order) {
+    const items = cmds.filter((c) => c.group === g);
+    if (items.length > 0) out.push({ group: GROUP_LABELS[g] ?? g, items });
+  }
+  const rest = cmds.filter((c) => !(order as readonly string[]).includes(c.group));
+  if (rest.length > 0) out.push({ group: '其他', items: rest });
+  return out;
+}
+
 /**
  * ⌘K 命令面板 — 纯查表渲染。
  * 打开时重新拉取注册表：运行中新增的插件命令立即出现（M3 验收机制）。
@@ -34,6 +54,8 @@ export function CommandPalette(props: {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [props.open]);
+
+  const groups = useMemo(() => groupCommands(filtered), [filtered]);
 
   if (!props.open) return null;
 
@@ -80,17 +102,25 @@ export function CommandPalette(props: {
           onKeyDown={onKeyDown}
         />
         <div className="palette-list">
-          {filtered.map((c, i) => (
-            <button
-              key={c.id}
-              data-testid="palette-item"
-              className={`palette-item${i === active ? ' active' : ''}`}
-              onClick={() => execute(c.id)}
-              onMouseEnter={() => setActive(i)}
-            >
-              <span className="palette-title">{c.title}</span>
-              <span className="palette-meta">{c.source} · {c.id}</span>
-            </button>
+          {groups.map(({ group, items }) => (
+            <div key={group} className="palette-group" role="group">
+              <div className="palette-group-heading">{group}</div>
+              {items.map((c) => {
+                const flatIndex = filtered.findIndex((x) => x.id === c.id);
+                return (
+                  <button
+                    key={c.id}
+                    data-testid="palette-item"
+                    className={`palette-item${flatIndex === active ? ' active' : ''}`}
+                    onClick={() => execute(c.id)}
+                    onMouseEnter={() => setActive(flatIndex)}
+                  >
+                    <span className="palette-title">{c.title}</span>
+                    <span className="palette-meta">{c.id}</span>
+                  </button>
+                );
+              })}
+            </div>
           ))}
           {filtered.length === 0 && <div className="palette-empty">没有匹配的命令</div>}
         </div>

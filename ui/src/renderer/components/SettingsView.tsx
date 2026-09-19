@@ -21,6 +21,14 @@ export function SettingsView(props: {
   const [section, setSection] = useState<'general' | 'agent' | 'presets' | 'connections' | 'storage'>('agent');
   const [newTitle, setNewTitle] = useState('');
 
+  // Codex 实测导航分组：personal / coding / integrations / archived
+  const NAV_GROUPS: Array<{ heading: string; items: Array<{ id: typeof section; label: string }> }> = [
+    { heading: '个人', items: [{ id: 'general', label: '通用' }] },
+    { heading: '编码', items: [{ id: 'agent', label: 'Agent' }, { id: 'presets', label: '预设库' }] },
+    { heading: '集成', items: [{ id: 'connections', label: '连接器' }] },
+    { heading: '归档', items: [{ id: 'storage', label: '存储' }] },
+  ];
+
   useEffect(() => {
     if (!props.open) return;
     setSection('agent');
@@ -36,15 +44,20 @@ export function SettingsView(props: {
   return (
     <div className="palette-backdrop" data-testid="settings" onMouseDown={props.onClose}>
       <div className="settings" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="settings-nav">
-          {(['general', 'agent', 'presets', 'connections', 'storage'] as const).map((sec) => (
-            <button
-              key={sec}
-              className={`settings-nav-item${section === sec ? ' active' : ''}`}
-              onClick={() => setSection(sec)}
-            >
-              {sec === 'general' ? '通用' : sec === 'agent' ? 'Agent' : sec === 'presets' ? '预设库' : sec === 'connections' ? '连接器' : '存储'}
-            </button>
+        <div className="settings-nav" aria-label="设置导航">
+          {NAV_GROUPS.map((g) => (
+            <div key={g.heading} className="settings-nav-group">
+              <div className="settings-nav-heading">{g.heading}</div>
+              {g.items.map((it) => (
+                <button
+                  key={it.id}
+                  className={`settings-nav-item${section === it.id ? ' active' : ''}`}
+                  onClick={() => setSection(it.id)}
+                >
+                  {it.label}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
         <div className="settings-body">

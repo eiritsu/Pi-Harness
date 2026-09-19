@@ -299,11 +299,17 @@
   z-index: 100;
 }
 .palette {
-  width: 560px; max-width: 90vw;
+  width: 500px; max-width: 90vw;      /* 实测 !w-[500px] */
   background: var(--surface-elevated);
-  border-radius: var(--r-lg);
-  box-shadow: var(--hairline), 0 16px 48px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;                 /* 实测 !rounded-[16px] */
+  box-shadow: 0 8px 10px -6px rgba(0,0,0,0.1), 0 20px 25px -5px rgba(0,0,0,0.25);
   overflow: hidden;
+}
+.palette-group { display: flex; flex-direction: column; }
+.palette-group-heading {
+  padding: 8px 14px 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
 }
 .palette-input {
   width: 100%;
@@ -325,6 +331,31 @@
 .palette-meta { color: var(--text-3); font-size: var(--fs-xs); font-family: var(--font-mono); }
 .palette-empty { color: var(--text-3); padding: 14px 18px; }
 
+/* ---- 右面板快捷卡（审查/终端/浏览器/文件，Codex 截图结构） ---- */
+.quick-card {
+  display: flex; align-items: center; gap: 10px;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--surface-elevated);
+  border-radius: var(--r-lg);
+  box-shadow: var(--hairline);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  width: 100%;
+  text-align: left;
+}
+.quick-card:hover { background: var(--surface-hover); }
+.quick-card .quick-ico { width: 20px; text-align: center; }
+.quick-card .quick-key {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  background: var(--surface-hover);
+  border-radius: var(--r-sm);
+  padding: 2px 6px;
+}
+
 /* ---- 设置 ---- */
 .settings {
   width: 720px; max-width: 92vw; height: 480px;
@@ -338,6 +369,12 @@
   border-right: 1px solid var(--border);
   padding: 12px;
   display: flex; flex-direction: column; gap: 1px;
+}
+.settings-nav-group { display: flex; flex-direction: column; gap: 1px; margin-bottom: 10px; }
+.settings-nav-heading {
+  padding: 6px 10px 2px;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
 }
 .settings-nav-item {
   height: var(--row-h);
