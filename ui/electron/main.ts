@@ -10,12 +10,18 @@
  */
 import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'node:path';
+import { SettingsStore } from './host/settings-store.js';
+import { PresetStore } from './host/preset-store.js';
+import type { HostRequest, HostResponse } from './host/host-api.js';
 import { FakeKernelDriver, PiKernelDriver } from '@pi-harness/kernel';
 import type { KernelDriver } from '@pi-harness/kernel';
 import type { Envelope, QueryResponse } from '@pi-harness/protocol';
 
 let win: BrowserWindow | null = null;
 let driver: KernelDriver | null = null;
+let settings: SettingsStore | null = null;
+let presets: PresetStore | null = null;
+let lastSessionId: string | null = null;
 
 function makeDriver(): KernelDriver {
   const which = process.env['PI_HARNESS_DRIVER'] ?? 'fake';
@@ -51,6 +57,7 @@ function createWindow(): void {
   win.webContents.on('did-finish-load', () => {
     // 事件通道：driver → renderer
     driver?.onEvent((event) => {
+      if (event.type === 'session_started') lastSessionId = event.sessionId;
       if (win && !win.isDestroyed()) {
         const envelope: Envelope = { channel: 'event', payload: event };
         win.webContents.send('harness:event', envelope);
@@ -64,6 +71,13 @@ function registerIpc(): void {
     if (!driver) return;
     if (envelope.channel === 'command') {
       driver.handleCommand(envelope.payload);
+      // 宿主平面编排：新会话应用默认权限档（M4）
+      if (envelope.payload.type === 'create_session' && settings) {
+        const mode = settings.get('agent').defaultPermissionMode;
+        if (lastSessionId && mode && mode !== 'sandbox_workspace_write') {
+          driver.handleCommand({ type: 'set_permission_mode', sessionId: lastSessionId, mode });
+        }
+      }
       return;
     }
     if (envelope.channel === 'query') {
@@ -80,9 +94,42 @@ function registerIpc(): void {
   });
 }
 
+function registerHostIpc(): void {
+  const dataDir = process.env['PI_HARNESS_DATA_DIR'] ?? path.join(app.getPath('userData'));
+  const settingsStore = new SettingsStore(path.join(dataDir, 'settings.json'));
+  const presetStore = new PresetStore(path.join(dataDir, 'presets'));
+  settings = settingsStore;
+  presets = presetStore;
+
+  ipcMain.handle('host:request', async (_e, req: HostRequest): Promise<HostResponse> => {
+    try {
+      switch (req.op) {
+        case 'settings.get':
+          return { ok: true, settings: settingsStore.load() };
+        case 'settings.set': {
+          const next = settingsStore.set(req.section, req.value as never);
+          return { ok: true, settings: next };
+        }
+        case 'presets.list':
+          return { ok: true, presets: presetStore.list() };
+        case 'presets.create':
+          return { ok: true, preset: presetStore.create(req.title) };
+        case 'presets.derive':
+          return { ok: true, preset: presetStore.derive(req.sourceId, req.newTitle) };
+        case 'presets.delete':
+          presetStore.delete(req.id);
+          return { ok: true };
+      }
+    } catch (err) {
+      return { ok: false, error: String(err) };
+    }
+  });
+}
+
 app.whenReady().then(() => {
   driver = makeDriver();
   registerIpc();
+  registerHostIpc();
   createWindow();
 
   app.on('activate', () => {

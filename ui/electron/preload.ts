@@ -20,6 +20,13 @@ const api = {
   },
 };
 
+const hostApi = {
+  /** 宿主平面服务：设置与预设库（与 kernel 契约分离） */
+  request: (req: unknown): Promise<{ ok: boolean; error?: string; [k: string]: unknown }> =>
+    ipcRenderer.invoke('host:request', req),
+};
+
 contextBridge.exposeInMainWorld('harness', api);
+contextBridge.exposeInMainWorld('hostApi', hostApi);
 
 export type HarnessApi = typeof api;

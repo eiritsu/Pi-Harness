@@ -115,6 +115,12 @@ export type KernelEvent =
       commandId: string;
       ok: boolean;
       detail?: string;
+    }
+  /** v1 追加：会话权限档变化（set_permission_mode / apply 预设后的回执） */
+  | {
+      type: 'permission_changed';
+      sessionId: SessionId;
+      mode: PermissionMode;
     };
 
 // ---------------------------------------------------------------------------

@@ -109,6 +109,10 @@ export function isKernelEvent(v: unknown): v is KernelEvent {
         typeof v['ok'] === 'boolean' &&
         (v['detail'] === undefined || typeof v['detail'] === 'string')
       );
+    case 'permission_changed':
+      return (
+        typeof v['sessionId'] === 'string' && isPermissionMode(v['mode'])
+      );
     default:
       return false;
   }

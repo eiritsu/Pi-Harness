@@ -13,7 +13,6 @@ const BUILTIN = {
 
 describe('M3 注册表加载器', () => {
   let dir = '';
-  it.afterEach?.(() => {}, 0);
 
   it('插件文件缺失 → 只返回 builtin，不报错', () => {
     const { snapshot, errors } = loadRegistrySnapshot(BUILTIN, ['/nonexistent/plugins.json']);

@@ -8,6 +8,9 @@ import { KernelBanner } from './components/KernelBanner';
 import { CommandPalette } from './components/CommandPalette';
 import { EventLog } from './components/EventLog';
 import { ToolPanel } from './components/ToolPanel';
+import { SettingsView } from './components/SettingsView';
+import { PermissionBadge, nextMode } from './components/PermissionBadge';
+import type { PresetFile, HarnessSettingsHost } from './host-types';
 import { logoUrl } from './assets/logo';
 
 declare global {
@@ -32,7 +35,11 @@ export function App() {
     initialState,
   );
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [bottomOpen, setBottomOpen] = useState(true);
+  const [presets, setPresets] = useState<PresetFile[]>([]);
+  const [defaultPerm, setDefaultPerm] = useState<string | undefined>(undefined);
+  const [sessionModes, setSessionModes] = useState<Record<string, string>>({});
   const queryIdRef = useRef(0);
 
   const queryRegistry = () => {
@@ -45,12 +52,25 @@ export function App() {
       dispatch({ type: 'event', envelope });
       if (envelope.channel === 'event' && envelope.payload.type === 'command_executed') {
         queryRegistry(); // 插件命令可能改动注册表 → 重查（幂等投影）
+        // host 语义：app.settings 打开设置页（UI 决定交互，kernel 只回执）
+        if (envelope.payload.commandId === 'app.settings') setSettingsOpen(true);
+      }
+      if (envelope.channel === 'event' && envelope.payload.type === 'permission_changed') {
+        const { sessionId, mode } = envelope.payload;
+        setSessionModes((m) => ({ ...m, [sessionId]: mode }));
       }
     });
     // 启动即拉会话列表与注册表（幂等投影）
     queryIdRef.current += 1;
     window.harness.send({ channel: 'query', id: queryIdRef.current, payload: { kind: 'list_sessions' } });
     queryRegistry();
+    // 宿主平面：设置与预设
+    void window.hostApi?.request({ op: 'settings.get' }).then((r) => {
+      if (r.ok && r.settings) setDefaultPerm(r.settings.agent?.defaultPermissionMode);
+    });
+    void window.hostApi?.request({ op: 'presets.list' }).then((r) => {
+      if (r.ok && r.presets) setPresets(r.presets);
+    });
     return off;
   }, []);
 
@@ -70,6 +90,37 @@ export function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  const refreshPresets = () => {
+    void window.hostApi?.request({ op: 'presets.list' }).then((r) => {
+      if (r.ok && r.presets) setPresets(r.presets);
+    });
+  };
+
+  const applyPreset = (p: PresetFile) => {
+    if (state.currentSessionId) {
+      window.harness.send({
+        channel: 'command',
+        payload: { type: 'set_permission_mode', sessionId: state.currentSessionId, mode: p.permissionMode },
+      });
+    }
+  };
+
+  const setDefaultPermission = (mode: string) => {
+    void window.hostApi?.request({ op: 'settings.set', section: 'agent', value: { defaultPermissionMode: mode } }).then((r) => {
+      if (r.ok && r.settings) setDefaultPerm(r.settings.agent?.defaultPermissionMode);
+    });
+  };
+
+  const cyclePermission = () => {
+    const sid = state.currentSessionId;
+    if (!sid) return;
+    const cur = (sessionModes[sid] ?? defaultPerm ?? 'sandbox_workspace_write') as Parameters<typeof nextMode>[0];
+    window.harness.send({
+      channel: 'command',
+      payload: { type: 'set_permission_mode', sessionId: sid, mode: nextMode(cur) },
+    });
+  };
 
   const runCommand = (commandId: string) => {
     window.harness.send({
@@ -120,7 +171,14 @@ export function App() {
             emptyState
           )}
         </div>
-        <Composer onSend={send} disabled={!state.currentSessionId} commands={state.registry?.commands ?? []} onRunCommand={runCommand} />
+        <Composer
+          onSend={send}
+          disabled={!state.currentSessionId}
+          commands={state.registry?.commands ?? []}
+          onRunCommand={runCommand}
+          permission={state.currentSessionId ? (sessionModes[state.currentSessionId] ?? defaultPerm) as never : undefined}
+          onCyclePermission={cyclePermission}
+        />
         {bottomOpen && <EventLog log={state.log} />}
       </main>
       <ToolPanel tools={state.registry?.tools ?? []} />
@@ -130,6 +188,23 @@ export function App() {
         onClose={() => setPaletteOpen(false)}
         onExecute={runCommand}
         onOpen={queryRegistry}
+      />
+      <SettingsView
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        presets={presets}
+        onApplyPreset={applyPreset}
+        onCreatePreset={(title) => {
+          void window.hostApi?.request({ op: 'presets.create', title }).then(refreshPresets);
+        }}
+        onDerivePreset={(sourceId, title) => {
+          void window.hostApi?.request({ op: 'presets.derive', sourceId, newTitle: title }).then(refreshPresets);
+        }}
+        onDeletePreset={(id) => {
+          void window.hostApi?.request({ op: 'presets.delete', id }).then(refreshPresets);
+        }}
+        onSetDefaultPermission={setDefaultPermission}
+        defaultPermission={defaultPerm as never}
       />
     </div>
   );

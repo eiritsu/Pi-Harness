@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { RegistryCommandEntry } from '@pi-harness/protocol/contract';
+import { PermissionBadge } from './PermissionBadge';
 
 export function Composer(props: {
   onSend: (text: string) => void;
   disabled?: boolean;
   commands?: RegistryCommandEntry[];
   onRunCommand?: (commandId: string) => void;
+  permission?: { mode: string } | string;
+  onCyclePermission?: () => void;
 }) {
   const [text, setText] = useState('');
 
@@ -69,6 +72,10 @@ export function Composer(props: {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
+      />
+      <PermissionBadge
+        mode={typeof props.permission === 'string' ? (props.permission as never) : undefined}
+        onCycle={() => props.onCyclePermission?.()}
       />
       <button
         className="primary send"

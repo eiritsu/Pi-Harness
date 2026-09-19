@@ -140,6 +140,7 @@ export class FakeKernel {
       }
       case 'set_permission_mode': {
         this.permissionMode = cmd.mode;
+        this.emit({ type: 'permission_changed', sessionId: cmd.sessionId, mode: cmd.mode });
         return;
       }
       case 'interrupt':

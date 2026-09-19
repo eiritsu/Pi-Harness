@@ -307,7 +307,10 @@ export class PiKernelDriver implements KernelDriver {
       }
       case 'set_permission_mode': {
         const rt = this.sessions.get(command.sessionId);
-        if (rt && isPermissionMode(command.mode)) rt.permissionMode = command.mode;
+        if (rt && isPermissionMode(command.mode)) {
+          rt.permissionMode = command.mode;
+          this.emit({ type: 'permission_changed', sessionId: command.sessionId, mode: command.mode });
+        }
         return;
       }
       case 'interrupt': {

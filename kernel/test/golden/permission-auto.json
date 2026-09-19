@@ -25,6 +25,15 @@
   },
   {
     "seq": 3,
+    "type": "permission_changed",
+    "payload": {
+      "type": "permission_changed",
+      "sessionId": "<id:session>",
+      "mode": "auto"
+    }
+  },
+  {
+    "seq": 4,
     "type": "message_start",
     "payload": {
       "type": "message_start",
@@ -33,7 +42,7 @@
     }
   },
   {
-    "seq": 4,
+    "seq": 5,
     "type": "text_delta",
     "payload": {
       "type": "text_delta",
@@ -42,7 +51,7 @@
     }
   },
   {
-    "seq": 5,
+    "seq": 6,
     "type": "tool_call",
     "payload": {
       "type": "tool_call",
@@ -58,7 +67,7 @@
     }
   },
   {
-    "seq": 6,
+    "seq": 7,
     "type": "tool_result",
     "payload": {
       "type": "tool_result",
@@ -73,7 +82,7 @@
     }
   },
   {
-    "seq": 7,
+    "seq": 8,
     "type": "text_delta",
     "payload": {
       "type": "text_delta",
@@ -82,7 +91,7 @@
     }
   },
   {
-    "seq": 8,
+    "seq": 9,
     "type": "message_end",
     "payload": {
       "type": "message_end",
