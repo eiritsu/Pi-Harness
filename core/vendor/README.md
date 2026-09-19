@@ -27,10 +27,23 @@ vendor 体积：约 4.4M（纯 src + package.json）。
 
 ## 接入状态
 
-- [x] 快照落库（本轮）
-- [ ] PiKernelDriver：驱动 `agent` loop，对接 protocol v1 事件面
-- [ ] 依赖闭包解析（typebox / diff / ignore / yaml / partial-json 等第三方依赖）
-- [ ] golden 回放对 PiKernelDriver 跑通（替换 FakeKernelDriver）
+- [x] 快照落库
+- [x] workspace 接入：`@earendil-works/*` 四包入 pnpm workspace，`Agent` 可从 `pi-agent-core` 导入
+- [x] PiKernelDriver：faux 模型脚本 → Agent loop → protocol v1 事件面（含审批门）
+- [ ] 真实 provider 接入（host 模型路由，nightly 冒烟）
+- [ ] coding-agent core 工具集接入（当前 driver 仅内置 fs.write 最小工具）
+- [ ] golden 回放对 PiKernelDriver 跑通（当前 golden 跑在 FakeKernelDriver 上）
+
+## 快照补丁（元数据，非源码改动；升级快照时需重新套用）
+
+1. 四包 `package.json`：`main`/`exports` 从 `./dist/*.js` 改指 `./src/*.ts`
+   —— 消费模型是 vitest/esbuild 直连 TS 源，不复制上游 tsgo 构建链
+2. 包间依赖 `^0.85.1` → `workspace:*`，强制互相解析到本快照而非 npm 旧版
+3. `ai`：devDependencies 显式加 `@smithy/types`（bedrock 代码的类型传递依赖，
+   pnpm 严格 node_modules 下不可省）
+4. `ai/src/providers/data/*.json`（728K）：上游构建期产物，由
+   `scripts/generate-models.ts --strict --data-only` 生成（需网络拉 models.dev 目录；
+   生成脚本未入 vendor，按需从上游克隆运行）
 
 ## 升级流程（季度节奏）
 

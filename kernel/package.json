@@ -10,7 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@pi-harness/protocol": "workspace:*"
+    "@pi-harness/protocol": "workspace:*",
+    "@earendil-works/pi-agent-core": "workspace:*",
+    "@earendil-works/pi-ai": "workspace:*",
+    "@earendil-works/chord": "workspace:*",
+    "@earendil-works/pi-telemetry": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^26.6.1",

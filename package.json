@@ -8,9 +8,17 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "pnpm -r --workspace-concurrency=1 test",
-    "test:watch": "pnpm -r --workspace-concurrency=1 test:watch",
-    "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint"
+    "test": "pnpm -r --filter '!@earendil-works/**' --workspace-concurrency=1 test",
+    "test:watch": "pnpm -r --filter '!@earendil-works/**' --workspace-concurrency=1 test:watch",
+    "typecheck": "pnpm -r --filter '!@earendil-works/**' typecheck",
+    "lint": "pnpm -r --filter '!@earendil-works/**' lint"
+  },
+  "pnpm": {
+    "overrides": {
+      "@earendil-works/pi-ai": "workspace:*",
+      "@earendil-works/pi-agent-core": "workspace:*",
+      "@earendil-works/chord": "workspace:*",
+      "@earendil-works/pi-telemetry": "workspace:*"
+    }
   }
 }
